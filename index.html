@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>长图编辑工具</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- 引入Fabric.js库 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+    <!-- 库加载检查 -->
+    <script>
+        window.addEventListener('load', function() {
+            if (typeof fabric === 'undefined') {
+                console.error('Fabric.js 库加载失败！');
+                alert('图像编辑库加载失败，请刷新页面重试。');
+            } else {
+                console.log('Fabric.js 库加载成功，版本：' + fabric.version);
+            }
+        });
+    </script>
+</head>
+<body>
+    <!-- 全局拖放事件处理 -->
+    <script>
+        // 阻止浏览器默认的拖放行为
+        document.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }, false);
+        
+        document.addEventListener('drop', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }, false);
+    </script>
+    <div class="container">
+        <header>
+            <h1>长图编辑工具pro</h1>
+            <div class="tool-bar">
+                <div class="tool-group">
+                    <button id="rectangle-tool" class="tool-btn" title="红框标注">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                        </svg>
+                    </button>
+                    <button id="mosaic-tool" class="tool-btn" title="马赛克">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M4 4h4v4H4V4z"></path>
+                            <path d="M10 4h4v4h-4V4z"></path>
+                            <path d="M16 4h4v4h-4V4z"></path>
+                            <path d="M4 10h4v4H4v-4z"></path>
+                            <path d="M10 10h4v4h-4v-4z"></path>
+                            <path d="M16 10h4v4h-4v-4z"></path>
+                            <path d="M4 16h4v4H4v-4z"></path>
+                            <path d="M10 16h4v4h-4v-4z"></path>
+                            <path d="M16 16h4v4h-4v-4z"></path>
+                        </svg>
+                    </button>
+                    <button id="text-tool" class="tool-btn" title="添加文字">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="4 7 4 4 20 4 20 7"></polyline>
+                            <line x1="9" y1="20" x2="15" y2="20"></line>
+                            <line x1="12" y1="4" x2="12" y2="20"></line>
+                        </svg>
+                    </button>
+                </div>
+                <div class="control-group">
+                    <button id="undo-btn" class="tool-btn" title="撤销">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 14L4 9l5-5"></path>
+                            <path d="M4 9h11c4 0 7 3 7 7v0c0 4-3 7-7 7H8"></path>
+                        </svg>
+                    </button>
+                    <button id="zoom-in" class="tool-btn" title="放大">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                            <line x1="11" y1="8" x2="11" y2="14"></line>
+                            <line x1="8" y1="11" x2="14" y2="11"></line>
+                        </svg>
+                    </button>
+                    <button id="zoom-out" class="tool-btn" title="缩小">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                            <line x1="8" y1="11" x2="14" y2="11"></line>
+                        </svg>
+                    </button>
+                    <button id="download-btn" class="action-btn" title="下载图片">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        下载
+                    </button>
+                    <button id="back-btn" class="action-btn" title="返回上传">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M19 12H5"></path>
+                            <polyline points="12 19 5 12 12 5"></polyline>
+                        </svg>
+                        返回
+                    </button>
+                </div>
+            </div>
+        </header>
+        
+        <main>
+            <div id="drop-zone" class="upload-area">
+                <p>将图片拖放到此处，或点击上传</p>
+                <input type="file" id="file-input" accept="image/*" hidden>
+                <div id="loading-indicator" class="loading-indicator" style="display: none;">
+                    <div class="spinner"></div>
+                    <p>正在加载图片...</p>
+                </div>
+                <div id="error-message" class="error-message" style="display: none;"></div>
+            </div>
+
+            <div id="canvas-container" class="canvas-container" style="display: none;">
+                <canvas id="editor-canvas"></canvas>
+            </div>
+            
+            <div id="tips" class="tips">
+                <h3>操作提示</h3>
+                <ul>
+                    <li><span class="tip-icon">🖊️</span> 红框标注：点击红框工具，然后在图片上拖动绘制矩形</li>
+                    <li><span class="tip-icon">🧩</span> 马赛克：点击马赛克工具，在需要隐藏的区域涂抹</li>
+                    <li><span class="tip-icon">📝</span> 文字编辑：点击文字工具，然后点击图片上的位置添加文字</li>
+                    <li><span class="tip-icon">🔍</span> 缩放视图：点击放大/缩小按钮，或按住Alt键拖动画布</li>
+                    <li><span class="tip-icon">↩️</span> 撤销操作：点击撤销按钮可撤销最后一步操作</li>
+                    <li><span class="tip-icon">💾</span> 下载图片：点击下载按钮保存编辑后的图片</li>
+                </ul>
+            </div>
+        </main>
+    </div>
+
+    <script src="fix-zoom.js"></script>
+    <!-- 性能优化脚本 - 需要在其他脚本之前加载 -->
+    <script src="optimize-performance.js"></script>
+    <script src="fix-tools.js"></script>
+    <!-- 矩形工具性能优化 -->
+    <script src="fix-rectangle.js"></script>
+    <!-- 工具设置面板初始化修复 -->
+    <script src="fix-panel.js"></script>
+    <!-- 坐标计算修复脚本 -->
+    <script src="fix-coordinate.js"></script>
+    <script src="app.js"></script>
+    
+    <!-- 辅助脚本，确保图片正确显示 -->
+    <script>
+        // 若初始加载后5秒图像仍未显示，尝试使用备用方法
+        window.setTimeout(function() {
+            const displayedImage = document.getElementById('displayed-image');
+            if (!displayedImage) {
+                console.log('未检测到显示的图片，尝试修复...');
+                
+                // 检查是否有图片数据但未显示
+                const canvasContainer = document.getElementById('canvas-container');
+                if (canvasContainer && canvasContainer.style.display === 'block' && canvasContainer.innerHTML === '') {
+                    console.log('Canvas容器可见但为空，尝试重新加载');
+                    // 尝试返回上传页面
+                    if (typeof backToUpload === 'function') {
+                        backToUpload();
+                        if (typeof showError === 'function') {
+                            showError('图片加载失败，请重新上传');
+                        }
+                    }
+                }
+            }
+        }, 5000);
+        
+        // 双击页面任意位置强制显示图片
+        document.addEventListener('dblclick', function() {
+            const canvasContainer = document.getElementById('canvas-container');
+            if (canvasContainer) {
+                console.log('用户双击，强制显示容器');
+                canvasContainer.style.display = 'block';
+                canvasContainer.classList.add('image-view-mode');
+            }
+        });
+        
+        // 确保文件输入变化时处理上传
+        document.addEventListener('DOMContentLoaded', function() {
+            const fileInput = document.getElementById('file-input');
+            const dropZone = document.getElementById('drop-zone');
+            
+            if (fileInput && dropZone) {
+                dropZone.addEventListener('click', function() {
+                    fileInput.click();
+                });
+                
+                fileInput.addEventListener('change', function(e) {
+                    if (this.files && this.files.length > 0) {
+                        const file = this.files[0];
+                        
+                        // 检查是否为图片
+                        if (file.type.match('image.*')) {
+                            // 隐藏上传区域，显示加载指示器
+                            dropZone.style.display = 'none';
+                            const loadingIndicator = document.getElementById('loading-indicator');
+                            if (loadingIndicator) {
+                                loadingIndicator.style.display = 'flex';
+                            }
+                            
+                            // 使用全局函数处理文件
+                            if (typeof loadImageFromFile === 'function') {
+                                loadImageFromFile(file);
+                            } else if (typeof FileReader !== 'undefined') {
+                                // 备用方法 - 确保创建drawing-overlay
+                                const reader = new FileReader();
+                                reader.onload = function(e) {
+                                    const imageUrl = e.target.result;
+                                    // 获取容器
+                                    const canvasContainer = document.getElementById('canvas-container');
+                                    if (canvasContainer) {
+                                        // 显示图片
+                                        canvasContainer.style.display = 'flex';
+                                        canvasContainer.innerHTML = '<div id="image-container" style="position: relative; width: 100%;"><img id="displayed-image" src="' + imageUrl + '" style="max-width: 100%; height: auto;" draggable="false"></div>';
+                                        
+                                        // 创建绘图覆盖层 - 这是关键
+                                        const imageContainer = document.getElementById('image-container');
+                                        const displayedImage = document.getElementById('displayed-image');
+                                        
+                                        if (imageContainer && displayedImage) {
+                                            // 等待图片加载
+                                            displayedImage.onload = function() {
+                                                console.log('备用方法: 图片加载完成');
+                                                
+                                                // 创建绘图覆盖层
+                                                const overlay = document.createElement('div');
+                                                overlay.className = 'drawing-overlay';
+                                                overlay.style.position = 'absolute';
+                                                overlay.style.top = '0';
+                                                overlay.style.left = '0';
+                                                overlay.style.width = '100%';
+                                                overlay.style.height = '100%';
+                                                overlay.style.pointerEvents = 'auto'; // 确保可以接收事件
+                                                overlay.style.zIndex = '10'; // 确保在图片上层
+                                                imageContainer.appendChild(overlay);
+                                                
+                                                console.log('备用方法: 绘图覆盖层创建完成');
+                                            };
+                                        }
+                                    }
+                                    // 隐藏加载指示器
+                                    if (loadingIndicator) {
+                                        loadingIndicator.style.display = 'none';
+                                    }
+                                };
+                                reader.readAsDataURL(file);
+                            }
+                        } else {
+                            // 显示错误
+                            if (typeof showError === 'function') {
+                                showError('请上传图片文件');
+                            } else {
+                                alert('请上传图片文件');
+                            }
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+
+    <!-- 修复下载功能的脚本 -->
+    <!-- 马赛克虚化功能修复脚本 -->
+    <script src="fix-mosaic.js"></script>
+    <script src="fix-download.js"></script>
+</body>
+</html> 
